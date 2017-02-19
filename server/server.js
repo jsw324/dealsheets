@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 
 var {mongoose} = require('./db/mongoose');
-var {Todo} = require('./models/todo');
+var {Deal} = require('./models/deal');
 var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
 
@@ -16,8 +16,8 @@ const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
-app.post('/todos', authenticate, (req, res) => {
-  var todo = new Todo({
+app.post('/deals', authenticate, (req, res) => {
+  var deal = new Deal({
     name: req.body.name,
     client: req.body.client,
     isPerm: req.body.isPerm,
@@ -31,35 +31,36 @@ app.post('/todos', authenticate, (req, res) => {
     _creator: req.user._id
   });
 
-  todo.save().then((doc) => {
+  deal.save().then((doc) => {
     res.send(doc);
   }, (e) => {
     res.status(400).send(e);
   });
 });
 
-app.get('/todos', authenticate, (req, res) => {
-  Todo.find({
+//get deals from logged in user
+app.get('/deals', authenticate, (req, res) => {
+  Deal.find({
     _creator: req.user._id
-  }).then((todos) => {
-    res.send({todos});
+  }).then((deals) => {
+    res.send({deals});
   }, (e) => {
     res.status(400).send(e);
   })
 });
 
-//GET /todos/123231
-app.get('/todos/:id', authenticate, (req, res) => {
+//GET one specific deal
+app.get('/deals/:id', authenticate, (req, res) => {
   var id = req.params.id;
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
-  Todo.findOne({
+  Deal.findOne({
       _id: id,
       _creator: req.user._id
-    }).then((todo) => {
-    if (todo) {
-      res.send({todo});
+    }).then((deal) => {
+    if (deal) {
+      res.send({deal});
     } else {
       return res.status(404).send();
     }
@@ -68,30 +69,30 @@ app.get('/todos/:id', authenticate, (req, res) => {
   })
 });
 
-// DELETE /todos/ObjectID
-app.delete('/todos/:id', authenticate, (req, res) => {
+// DELETE deal by ID
+app.delete('/deals/:id', authenticate, (req, res) => {
   var id = req.params.id;
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
-  Todo.findOneAndRemove({
+  Deal.findOneAndRemove({
     _id: id,
     _creator: req.user._id
-  }).then((todo) => {
-    if (!todo) {
+  }).then((deal) => {
+    if (!deal) {
       return res.status(404).send();
     } else {
-      res.send({todo});
+      res.send({deal});
     }
   }).catch((e) => {
     res.status(400).send();
   })
 });
 
-//PATCH update route
-app.patch('/todos/:id', authenticate, (req, res) => {
+//PATCH update deal
+app.patch('/deals/:id', authenticate, (req, res) => {
   var id = req.params.id;
-  var body = _.pick(req.body, ['text', 'completed']);
+  var body = _.pick(req.body, ['name', 'completed']);
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
@@ -104,14 +105,14 @@ app.patch('/todos/:id', authenticate, (req, res) => {
     body.completedAt = null;
   }
 
-  Todo.findOneAndUpdate({
+  Deal.findOneAndUpdate({
     _id: id,
     _creator: req.user._id
-  }, {$set: body}, {new: true}).then((todo) => {
-    if (!todo) {
+  }, {$set: body}, {new: true}).then((deal) => {
+    if (!deal) {
       return res.status(404).send();
     }
-    res.send({todo});
+    res.send({deal});
   }).catch((e) => {
     res.status(400).send();
   })
@@ -137,7 +138,7 @@ app.get('/users/me', authenticate, (req, res) => {
 });
 
 app.post('/users/login', (req, res) => {
-  var body = _.pick(req.body, ['email', 'password']);
+  var body = _.pick(req.body, ['email', 'password', 'isAdmin']);
 
   User.findByCredentials(body.email, body.password).then((user) => {
     return user.generateAuthToken().then((token) => {

@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-var Todo = mongoose.model('Todo', {
+var Deal = mongoose.model('Deal', {
   name: {
     type: String,
     required: true,
@@ -26,6 +26,9 @@ var Todo = mongoose.model('Todo', {
   },
   salary: {
     type: Number
+  },
+  isW2: {
+    type: Boolean
   },
   payRate: {
     type: Number
@@ -53,4 +56,4 @@ var Todo = mongoose.model('Todo', {
   }
 });
 
-module.exports = {Todo};
+module.exports = {Deal};
