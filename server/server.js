@@ -63,10 +63,12 @@ app.post('/permDeal', authenticate, (req, res) => {
 
 
 //get deals from logged in user
-app.get('/deals', authenticate, (req, res) => {
-    Deal.find({
+app.get('/getPermDeals', authenticate, (req, res) => {
+    console.log('req.user', req.user._id);
+    permDeal.find({
         _creator: req.user._id
     }).then((deals) => {
+        console.log('deal', deals);
         res.send({ deals });
     }, (e) => {
         res.status(400).send(e);
@@ -149,7 +151,7 @@ app.post('/users', (req, res) => {
     user.save().then(() => {
         return user.generateAuthToken();
     }).then((token) => {
-        console.log('user', user);
+        res.status(200).send(user);
         res.header('x-auth', token).send(user);
     }).catch((e) => {
         console.log('error', e);
@@ -166,9 +168,15 @@ app.post('/users/login', (req, res) => {
     var body = _.pick(req.body, ['email', 'password', 'isAdmin']);
     User.findByCredentials(body.email, body.password).then((user) => {
         return user.generateAuthToken().then((token) => {
-            console.log('jason walkow user', user);
-            res.status(200).send(user);
-            //  res.header('x-auth', token).send(user);
+            var userObj = {
+                email: user.email,
+                isAdmin: user.isAdmin,
+                _id: user._id,
+                token: user.tokens[user.tokens.length - 1]
+            };
+            res.header('x-auth', token).send(user);
+            res.status(200).send(userObj);
+
         });
     }).catch((e) => {
         res.status(400).send();
