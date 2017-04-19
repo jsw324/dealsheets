@@ -61,11 +61,22 @@ app.post('/permDeal', authenticate, (req, res) => {
     });
 });
 
-
 //get deals from logged in user
 app.get('/getPermDeals', authenticate, (req, res) => {
     console.log('req.user', req.user._id);
     permDeal.find({
+        _creator: req.user._id
+    }).then((deals) => {
+        res.send({ deals });
+    }, (e) => {
+        res.status(400).send(e);
+    })
+});
+
+//get deals from logged in user
+app.get('/getContractDeals', authenticate, (req, res) => {
+    console.log('req.user', req.user._id);
+    contractDeal.find({
         _creator: req.user._id
     }).then((deals) => {
         console.log('deal', deals);
